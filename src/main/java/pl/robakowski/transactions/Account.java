@@ -3,19 +3,21 @@ package pl.robakowski.transactions;
 import com.dslplatform.json.CompiledJson;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
+
 @CompiledJson
 public class Account implements Comparable<Account> {
 
     private final String account;
     private int debitCount;
     private int creditCount;
-    private float balance;
+    private BigDecimal balance = new BigDecimal(0);
 
     public Account(String account) {
         this.account = account;
     }
 
-    public Account(String account, int debitCount, int creditCount, float balance) {
+    public Account(String account, int debitCount, int creditCount, BigDecimal balance) {
         this.account = account;
         this.debitCount = debitCount;
         this.creditCount = creditCount;
@@ -34,18 +36,18 @@ public class Account implements Comparable<Account> {
         return creditCount;
     }
 
-    public float getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public void credit(float amount) {
+    public void credit(BigDecimal amount) {
         creditCount++;
-        balance += amount;
+        balance = balance.add(amount);
     }
 
-    public void debit(float amount) {
+    public void debit(BigDecimal amount) {
         debitCount++;
-        balance -= amount;
+        balance = balance.subtract(amount);
     }
 
     @Override

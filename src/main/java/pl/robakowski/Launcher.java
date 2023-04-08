@@ -76,7 +76,8 @@ public class Launcher extends HttpServerLauncher {
                     SettablePromise<HttpResponse> response = new SettablePromise<>();
                     executor.execute(() -> {
                         try {
-                            response.set(handleTransactions(eventloop, json, body, writer));
+                            HttpResponse result = handleTransactions(eventloop, json, body, writer);
+                            eventloop.execute(() -> response.set(result));
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }

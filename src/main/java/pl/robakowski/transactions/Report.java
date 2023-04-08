@@ -1,6 +1,10 @@
 package pl.robakowski.transactions;
 
-import java.util.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class Report {
     private final HashMap<String, Account> accountsMap = new HashMap<>();
@@ -10,9 +14,9 @@ public class Report {
             Transaction transaction = transactions.next();
             Account debitAccount = accountsMap.computeIfAbsent(transaction.creditAccount(), Account::new);
             Account creditAccount = accountsMap.computeIfAbsent(transaction.debitAccount(), Account::new);
-            float amount = transaction.amount();
-            debitAccount.debit(amount);
-            creditAccount.credit(amount);
+            BigDecimal amount = transaction.amount();
+            debitAccount.credit(amount);
+            creditAccount.debit(amount);
         }
     }
 

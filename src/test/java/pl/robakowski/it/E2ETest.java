@@ -101,8 +101,43 @@ public class E2ETest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"transactions1", "transactions_big"})
+    public void testTransactions(String name) throws Exception {
+        doRequest("/transactions/report", name + "_request.json", name + "_response.json");
+    }
+
     @Test
-    public void testGenerate() throws Exception {
+    public void testTransactionsMultithreaded() throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        List<Future<Void>> futures = new ArrayList<>();
+        InputStream is = getClass().getClassLoader().getResourceAsStream("transactions_big_request.json");
+        byte[] request = is.readAllBytes();
+
+        for (int i = 0; i < 1000; i++) {
+            futures.add(executor.submit(() -> {
+                URL url = new URL("http://localhost:8080/transactions/report");
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
+                con.setDoOutput(true);
+
+                try (OutputStream os = con.getOutputStream()) {
+                    os.write(request);
+                }
+
+                try (InputStream isr = con.getInputStream()) {
+                    isr.readAllBytes();
+                }
+                return null;
+            }));
+        }
+        for (Future<Void> future : futures) {
+            future.get();
+        }
+    }
+
+    //@Test
+    public void testGenerateAtms() throws Exception {
         DslJson<Object> json = new DslJson<>();
         List<Atm> requests = new ArrayList<>(100000000);
         for (int i = 0; i < 1000; i++) {
