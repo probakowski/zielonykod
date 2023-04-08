@@ -2,6 +2,7 @@ import org.gradle.model.internal.core.ModelNodes.withType
 
 plugins {
     id("java")
+    id("application")
 }
 
 group = "org.example"
@@ -15,6 +16,11 @@ tasks.test {
     minHeapSize = "2048m"
     maxHeapSize = "2048m"
     jvmArgs = listOf("-XX:MaxPermSize=512m")
+}
+
+application {
+    mainClass.set("pl.robakowski.Launcher")
+    applicationDefaultJvmArgs = listOf("-Xmx3G", "-Xms3G", "-XX:MaxPermSize=512m")
 }
 
 dependencies {
