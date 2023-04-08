@@ -20,7 +20,7 @@ tasks.test {
 
 application {
     mainClass.set("pl.robakowski.Launcher")
-    applicationDefaultJvmArgs = listOf("-Xmx3G", "-Xms3G", "-XX:MaxPermSize=512m")
+    applicationDefaultJvmArgs = listOf("-Xmx3G", "-Xms3G", "-server")
 }
 
 dependencies {
