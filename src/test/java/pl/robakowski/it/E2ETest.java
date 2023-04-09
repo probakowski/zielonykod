@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.LoggerFactory;
 import pl.robakowski.Launcher;
 import pl.robakowski.atms.Atm;
 import pl.robakowski.atms.Request;
@@ -20,6 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -113,6 +115,7 @@ public class E2ETest {
         List<Future<Void>> futures = new ArrayList<>();
         InputStream is = getClass().getClassLoader().getResourceAsStream("transactions_big_request.json");
         byte[] request = is.readAllBytes();
+        ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
 
         for (int i = 0; i < 1000; i++) {
             futures.add(executor.submit(() -> {
@@ -121,6 +124,7 @@ public class E2ETest {
                 con.setRequestMethod("POST");
                 con.setDoOutput(true);
 
+                long start = System.currentTimeMillis();
                 try (OutputStream os = con.getOutputStream()) {
                     os.write(request);
                 }
@@ -128,12 +132,16 @@ public class E2ETest {
                 try (InputStream isr = con.getInputStream()) {
                     isr.readAllBytes();
                 }
+                queue.add(System.currentTimeMillis() - start);
                 return null;
             }));
         }
         for (Future<Void> future : futures) {
             future.get();
         }
+        ArrayList<Long> longs = new ArrayList<>(queue);
+        longs.sort(null);
+        LoggerFactory.getLogger(E2ETest.class).info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
     }
 
     //@Test
