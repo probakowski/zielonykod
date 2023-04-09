@@ -88,6 +88,9 @@ public class E2ETest {
         for (Future<Void> future : futures) {
             future.get();
         }
+        ArrayList<Long> longs = new ArrayList<>(queue);
+        longs.sort(null);
+        LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
     }
 
     private void doRequest(String path, String requestFile, String responseFile) throws IOException {
