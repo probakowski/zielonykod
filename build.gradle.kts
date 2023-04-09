@@ -1,5 +1,3 @@
-import org.gradle.model.internal.core.ModelNodes.withType
-
 plugins {
     id("java")
     id("application")
@@ -15,7 +13,6 @@ repositories {
 tasks.test {
     minHeapSize = "2048m"
     maxHeapSize = "2048m"
-    jvmArgs = listOf("-XX:MaxPermSize=512m")
 }
 
 application {
