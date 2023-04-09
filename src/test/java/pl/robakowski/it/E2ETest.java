@@ -64,7 +64,7 @@ public class E2ETest {
         is = getClass().getClassLoader().getResourceAsStream("atms_big_response.json");
         byte[] response = is.readAllBytes();
         ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10000; i++) {
             futures.add(executor.submit(() -> {
                 URL url = new URL("http://localhost:8080/atms/calculateOrder");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
