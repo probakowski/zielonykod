@@ -19,10 +19,7 @@ import pl.robakowski.game.Group;
 import pl.robakowski.transactions.Amount;
 import pl.robakowski.transactions.Transaction;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
@@ -34,6 +31,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class E2ETest {
 
@@ -63,16 +62,25 @@ public class E2ETest {
         doRequest("/onlinegame/calculate", name + "_request.json", name + "_response.json");
     }
 
+    Random random = new Random(353256456);
+
+    List<Game> games = IntStream.range(0, 1000).mapToObj(i -> {
+        List<Clan> clans = IntStream.range(0, 20000)
+                .mapToObj(j -> new Clan(random.nextInt(999) + 1, random.nextInt(1000000)))
+                .collect(Collectors.toCollection(() -> new ArrayList<>(20000)));
+        return new Game(1000, clans);
+    }).toList();
+
     @Test
     public void testGameMultithreaded() throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool(10);
         List<Future<Void>> futures = new ArrayList<>();
-        InputStream is = getClass().getClassLoader().getResourceAsStream("game_big_request.json");
-        byte[] request = is.readAllBytes();
-        is = getClass().getClassLoader().getResourceAsStream("game_big_response.json");
-        byte[] response = is.readAllBytes();
+
         ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
-        for (int i = 0; i < 1000; i++) {
+        DslJson<Object> json = new DslJson<>();
+        for (Game game : games) {
+            JsonWriter writer = json.newWriter();
+            json.serialize(writer, game);
             futures.add(executor.submit(() -> {
                 URL url = new URL("http://localhost:8080/onlinegame/calculate");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -81,14 +89,13 @@ public class E2ETest {
 
                 long start = System.currentTimeMillis();
 
-                try (OutputStream os = con.getOutputStream()) {
-                    os.write(request);
+                try (OutputStream os = new BufferedOutputStream(con.getOutputStream())) {
+                    writer.toStream(os);
                 }
 
                 try (InputStream isr = con.getInputStream()) {
-                    byte[] actual = isr.readAllBytes();
+                    isr.readAllBytes();
                     queue.add(System.currentTimeMillis() - start);
-//                    Assertions.assertArrayEquals(actual, response);
                 }
                 return null;
             }));

@@ -17,29 +17,29 @@ public record Game(int groupCount, List<Clan> clans) {
         allGroups.clear();
         clans.sort(null);
         for (Clan clan : clans) {
-            var shouldCreateGroup = true;
-            var it = groups.iterator();
-            while (it.hasNext()) {
-                Group next = it.next();
-                if (next.getCapacity() >= clan.numberOfPlayers()) {
-                    shouldCreateGroup = false;
-                    next.add(clan);
-                    if (next.getCapacity() == 0) {
-                        it.remove();
-                    }
-                    break;
-                }
-            }
-            if (shouldCreateGroup) {
-                Group group = new Group(groupCount);
-                allGroups.add(group);
-                group.add(clan);
-                if (group.getCapacity() > 0) {
-                    groups.add(group);
-                }
-            }
+            putInGroup(groups, allGroups, clan);
         }
 
         return allGroups;
+    }
+
+    private void putInGroup(LinkedList<Group> groups, ArrayList<Group> allGroups, Clan clan) {
+        var it = groups.iterator();
+        while (it.hasNext()) {
+            Group next = it.next();
+            if (next.getCapacity() >= clan.numberOfPlayers()) {
+                next.add(clan);
+                if (next.getCapacity() == 0) {
+                    it.remove();
+                }
+                return;
+            }
+        }
+        Group group = new Group(groupCount);
+        allGroups.add(group);
+        group.add(clan);
+        if (group.getCapacity() > 0) {
+            groups.add(group);
+        }
     }
 }
