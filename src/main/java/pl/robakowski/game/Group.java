@@ -1,25 +1,34 @@
 package pl.robakowski.game;
 
-import com.dslplatform.json.CompiledJson;
-import com.dslplatform.json.JsonAttribute;
-
 import java.util.LinkedList;
+import java.util.List;
 
-public class Group extends LinkedList<Clan> {
+public class Group {
+
+    private final List<Clan> clans;
 
     public Group(int capacity) {
         this.capacity = capacity;
+        this.clans = new LinkedList<>();
+    }
+
+    public Group(int capacity, List<Clan> clans) {
+        this.capacity = capacity;
+        this.clans = new LinkedList<>(clans);
     }
 
     public int getCapacity() {
         return capacity;
     }
 
-    @JsonAttribute(ignore = true)
     private int capacity;
 
-    @Override
-    public boolean offer(Clan clan) {
-        return super.offer(clan);
+    public void add(Clan clan) {
+        capacity -= clan.numberOfPlayers();
+        clans.add(clan);
+    }
+
+    public List<Clan> getClans() {
+        return clans;
     }
 }

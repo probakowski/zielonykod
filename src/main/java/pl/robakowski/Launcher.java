@@ -3,6 +3,7 @@ package pl.robakowski;
 import com.dslplatform.json.DslJson;
 import com.dslplatform.json.JsonWriter;
 import io.activej.bytebuf.ByteBuf;
+import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
@@ -12,12 +13,14 @@ import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
-import io.activej.promise.SettablePromise;
+import io.activej.promise.Promise;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 import pl.robakowski.atms.Atm;
 import pl.robakowski.atms.Request;
+import pl.robakowski.game.Clan;
 import pl.robakowski.game.Game;
+import pl.robakowski.game.Group;
 import pl.robakowski.transactions.Report;
 import pl.robakowski.transactions.Transaction;
 
@@ -42,7 +45,9 @@ public class Launcher extends HttpServerLauncher {
 
     @Provides
     DslJson<?> json() {
-        return new DslJson<>();
+        DslJson<?> json = new DslJson<>();
+        json.registerWriter(Group.class, (writer, value) -> writer.serialize(value.getClans(), json.tryFindWriter(Clan.class)));
+        return json;
     }
 
     @Provides
@@ -52,6 +57,7 @@ public class Launcher extends HttpServerLauncher {
 
     @Provides
     AsyncServlet servlet(Executor executor, Eventloop eventloop, DslJson<?> json, ThreadLocal<JsonWriter> writer) {
+        FatalErrorHandlers.setGlobalFatalErrorHandler((e, context) -> logger.error("Error in handler", e));
         return RoutingServlet.create()
                 .map(HttpMethod.POST, "/atms/calculateOrder", AsyncServlet.ofBlocking(executor, request -> {
                     ByteBuf body = request.getBody();
@@ -67,22 +73,18 @@ public class Launcher extends HttpServerLauncher {
                 }))
                 .map(HttpMethod.POST, "/onlinegame/calculate", AsyncServlet.ofBlocking(executor, request -> {
                     ByteBuf body = request.getBody();
-                    Game game = json.deserialize(Game.class, body.array(), body.tail());
+                    var is = new ByteArrayInputStream(body.array(), body.head(), body.tail() - body.head());
+                    Game game = json.deserialize(Game.class, is);
+                    JsonWriter jsonWriter = writer.get();
+                    jsonWriter.reset();
+                    json.serialize(jsonWriter, game.getOrder());
                     return HttpResponse.ok200()
-                            .withHtml("calculateOrder");
+                            .withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+                            .withBody(ByteBuf.wrap(jsonWriter.getByteBuffer(), 0, jsonWriter.size()));
                 }))
                 .map(HttpMethod.POST, "/transactions/report", request -> {
                     ChannelSupplier<ByteBuf> body = request.takeBodyStream();
-                    SettablePromise<HttpResponse> response = new SettablePromise<>();
-                    executor.execute(() -> {
-                        try {
-                            HttpResponse result = handleTransactions(eventloop, json, body, writer);
-                            eventloop.execute(() -> response.set(result));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                    return response;
+                    return Promise.ofBlocking(executor, () -> handleTransactions(eventloop, json, body, writer));
                 });
     }
 

@@ -1,6 +1,5 @@
 package pl.robakowski.transactions;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,7 +13,7 @@ public class Report {
             Transaction transaction = transactions.next();
             Account debitAccount = accountsMap.computeIfAbsent(transaction.creditAccount(), Account::new);
             Account creditAccount = accountsMap.computeIfAbsent(transaction.debitAccount(), Account::new);
-            BigDecimal amount = transaction.amount();
+            Amount amount = transaction.amount();
             debitAccount.credit(amount);
             creditAccount.debit(amount);
         }
