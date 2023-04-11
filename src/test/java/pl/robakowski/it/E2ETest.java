@@ -68,7 +68,7 @@ public class E2ETest {
         List<Clan> clans = IntStream.range(0, 20000)
                 .mapToObj(j -> new Clan(random.nextInt(999) + 1, random.nextInt(1000000)))
                 .collect(Collectors.toCollection(() -> new ArrayList<>(20000)));
-        return new Game(1000, clans);
+        return new Game(1000, clans.toArray(Clan[]::new));
     }).toList();
 
     @Test
@@ -246,7 +246,7 @@ public class E2ETest {
         for (int i = 0; i < 20000; i++) {
             clans.add(new Clan(random.nextInt(groupSize), random.nextInt(1000000)));
         }
-        Game game = new Game(groupSize, clans);
+        Game game = new Game(groupSize, clans.toArray(Clan[]::new));
         try (OutputStream os = new FileOutputStream("game_big_request.json")) {
             json.serialize(game, os);
         }
@@ -265,7 +265,7 @@ public class E2ETest {
         for (int i = 0; i < 20000; i++) {
             clans.add(new Clan(2, 1000000));
         }
-        Game game = new Game(3, clans);
+        Game game = new Game(3, clans.toArray(Clan[]::new));
         try (OutputStream os = new FileOutputStream("game_big_request.json")) {
             json.serialize(game, os);
         }
