@@ -31,7 +31,7 @@ public class AmountTest {
             }
 
             @Override
-            public int read(@NotNull byte[] b, int off, int len) throws IOException {
+            public int read(byte @NotNull [] b, int off, int len) throws IOException {
                 if (i >= s.length()) {
                     return -1;
                 }
@@ -41,6 +41,7 @@ public class AmountTest {
         };
 
         Transaction deserialize = new DslJson<>().deserialize(Transaction.class, is);
+        Assertions.assertNotNull(deserialize);
         Assertions.assertEquals("10.90", deserialize.amount().toString());
     }
 }

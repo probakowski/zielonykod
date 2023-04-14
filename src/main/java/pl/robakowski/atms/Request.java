@@ -3,10 +3,6 @@ package pl.robakowski.atms;
 import com.dslplatform.json.CompiledJson;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 @CompiledJson
 public class Request extends Atm implements Comparable<Request> {
 
@@ -33,13 +29,18 @@ public class Request extends Atm implements Comparable<Request> {
         return diff == 0 ? request.getAtmId() - getAtmId() : diff;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     @CompiledJson
     public enum RequestType {
         FAILURE_RESTART, PRIORITY, SIGNAL_LOW, STANDARD
-    }
-
-    public static Collection<? extends Atm> calculateOrder(List<Request> requests) {
-        Collections.sort(requests);
-        return requests;
     }
 }

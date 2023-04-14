@@ -1,14 +1,21 @@
 package pl.robakowski.transactions;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import com.dslplatform.json.JsonWriter;
+import pl.robakowski.Handler;
 
-public class Report {
-    private final HashMap<String, Account> accountsMap = new HashMap<>();
+import java.io.InputStream;
+import java.util.*;
 
-    public void processTransactions(Iterator<Transaction> transactions) {
+public class TransactionsHandler extends Handler {
+
+    @Override
+    protected void handle(InputStream is, JsonWriter writer) throws Exception {
+        Iterator<Transaction> transactions = json.iterateOver(Transaction.class, is);
+        if (transactions == null) {
+            transactions = Collections.emptyIterator();
+        }
+
+        HashMap<String, Account> accountsMap = new HashMap<>();
         while (transactions.hasNext()) {
             Transaction transaction = transactions.next();
             Account debitAccount = accountsMap.computeIfAbsent(transaction.creditAccount(), Account::new);
@@ -17,11 +24,9 @@ public class Report {
             debitAccount.credit(amount);
             creditAccount.debit(amount);
         }
-    }
 
-    public List<Account> getAccounts() {
         List<Account> accounts = new ArrayList<>(accountsMap.values());
         accounts.sort(null);
-        return accounts;
+        json.serialize(writer, accounts);
     }
 }

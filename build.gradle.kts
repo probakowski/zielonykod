@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("application")
+    id("com.github.spotbugs") version "5.0.14"
 }
 
 group = "org.example"
@@ -13,6 +14,24 @@ repositories {
 tasks.test {
     minHeapSize = "2048m"
     maxHeapSize = "2048m"
+}
+
+with(sourceSets.create("integration")) {
+    java.srcDir("src/integration/java")
+    compileClasspath += sourceSets.main.get().output
+}
+
+configurations {
+    get("integrationImplementation").apply {
+        extendsFrom(configurations.testImplementation.get())
+    }
+    get("integrationRuntimeOnly").apply {
+        extendsFrom(configurations.testRuntimeOnly.get())
+    }
+}
+
+spotbugs {
+    excludeFilter.set(file("spotbugs.exclude.xml"))
 }
 
 application {
@@ -34,6 +53,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+
+    spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.12.0")
 }
 
 tasks.getByName<Test>("test") {
