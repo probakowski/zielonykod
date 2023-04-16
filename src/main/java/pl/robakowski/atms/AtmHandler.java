@@ -30,9 +30,10 @@ public class AtmHandler extends Handler {
             }
             buckets[region].add(request);
         }
+        int estimatedAtmsPerRegion = i / maxRegionNumber;
         List<Atm> atms = new ArrayList<>(i);
         for (int j = 0; j < buckets.length; j += requestTypesCount) {
-            HashSet<Atm> visited = new HashSet<>();
+            HashSet<Atm> visited = new HashSet<>(estimatedAtmsPerRegion);
             if (buckets[j] != null) {
                 atms.addAll(buckets[j]);
                 visited.addAll(buckets[j]);

@@ -2,8 +2,6 @@ package pl.robakowski.atms;
 
 import com.dslplatform.json.CompiledJson;
 
-import java.util.Objects;
-
 @CompiledJson
 public class Atm {
 
@@ -33,6 +31,6 @@ public class Atm {
 
     @Override
     public int hashCode() {
-        return Objects.hash(region, atmId);
+        return 31 * region + atmId;
     }
 }
