@@ -5,10 +5,7 @@ import io.activej.common.exception.FatalErrorHandlers;
 import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
-import io.activej.http.AsyncServlet;
-import io.activej.http.HttpMethod;
-import io.activej.http.HttpResponse;
-import io.activej.http.RoutingServlet;
+import io.activej.http.*;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.promise.Promise;
@@ -35,20 +32,20 @@ public class Launcher extends HttpServerLauncher {
         GameHandler gameHandler = new GameHandler();
         TransactionsHandler transactionsHandler = new TransactionsHandler();
         return RoutingServlet.create()
-                .map(HttpMethod.POST, "/atms/calculateOrder", handle(atmHandler, eventloop))
-                .map(HttpMethod.POST, "/onlinegame/calculate", handle(gameHandler, eventloop))
-                .map(HttpMethod.POST, "/transactions/report", handle(transactionsHandler, eventloop));
+                .map(HttpMethod.POST, "/atms/calculateOrder", request -> handle(request, atmHandler, eventloop))
+                .map(HttpMethod.POST, "/onlinegame/calculate", request -> handle(request, gameHandler, eventloop))
+                .map(HttpMethod.POST, "/transactions/report", request -> handle(request, transactionsHandler, eventloop));
     }
 
-    private static AsyncServlet handle(Handler handler, Eventloop eventloop) {
-        return request -> {
-            ChannelSupplier<ByteBuf> body = request.takeBodyStream();
-            return Promise.ofBlocking(executor, () -> {
-                try (InputStream is = ChannelSuppliers.channelSupplierAsInputStream(eventloop, body)) {
-                    return handler.handle(is);
-                }
-            }).then(buf -> HttpResponse.ok200().withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8)).withBody(buf).promise());
-        };
+    private static Promise<HttpResponse> handle(HttpRequest request, Handler handler, Eventloop eventloop) {
+        ChannelSupplier<ByteBuf> body = request.takeBodyStream();
+        return Promise.ofBlocking(executor, () -> {
+            try (InputStream is = ChannelSuppliers.channelSupplierAsInputStream(eventloop, body)) {
+                return handler.handle(is);
+            }
+        }).then(buf -> HttpResponse.ok200()
+                .withHeader(CONTENT_TYPE, ofContentType(JSON_UTF_8))
+                .withBody(buf).promise());
     }
 
     public static void main(String[] args) throws Exception {

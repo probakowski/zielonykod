@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public class E2ETest {
     @ParameterizedTest
     @ValueSource(strings = {"game1", "game_big"})
     public void testGame(String name) throws Exception {
-        doRequest("/onlinegame/calculate", name + "_request.json", name + "_response.json");
+        doRequest("onlinegame/calculate", name + "_request.json", name + "_response.json");
     }
 
     private static final List<Game> GAMES = IntStream.range(0, 1000).mapToObj(i -> {
@@ -104,7 +105,7 @@ public class E2ETest {
     @ParameterizedTest
     @ValueSource(strings = {"atms1", "atms2", "atms_big"})
     public void testAtms(String name) throws Exception {
-        doRequest("/atms/calculateOrder", name + "_request.json", name + "_response.json");
+        doRequest("atms/calculateOrder", name + "_request.json", name + "_response.json");
     }
 
     @Test
@@ -116,7 +117,7 @@ public class E2ETest {
         is = getClass().getClassLoader().getResourceAsStream("atms_big_response.json");
         byte[] response = is.readAllBytes();
         ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10000; i++) {
             futures.add(executor.submit(() -> {
                 URL url = new URL("http://localhost:8080/atms/calculateOrder");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -150,13 +151,13 @@ public class E2ETest {
     }
 
     private void doRequest(String path, String requestFile, String responseFile) throws IOException {
-        URL url = new URL("http://localhost:8080" + path);
+        URL url = new URL(String.format("http://localhost:8080/%s", path));
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setDoOutput(true);
 
         try (OutputStream os = con.getOutputStream();
-             InputStream is = getClass().getClassLoader().getResourceAsStream(requestFile)) {
+             InputStream is = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(requestFile))) {
             is.transferTo(os);
         }
 
@@ -169,7 +170,7 @@ public class E2ETest {
         }
 
 
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(responseFile)) {
+        try (InputStream is = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(responseFile))) {
             byte[] expected = is.readAllBytes();
             Assertions.assertArrayEquals(expected, response);
         }
@@ -178,15 +179,17 @@ public class E2ETest {
     @ParameterizedTest
     @ValueSource(strings = {"transactions1", "transactions_big"})
     public void testTransactions(String name) throws Exception {
-        doRequest("/transactions/report", name + "_request.json", name + "_response.json");
+        doRequest("transactions/report", name + "_request.json", name + "_response.json");
     }
 
     @Test
     public void testTransactionsMultithreaded() throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool(10);
         List<Future<Void>> futures = new ArrayList<>();
-        InputStream is = getClass().getClassLoader().getResourceAsStream("transactions_big_request.json");
-        byte[] request = is.readAllBytes();
+        byte[] request;
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("transactions_big_request.json")) {
+            request = Objects.requireNonNull(is).readAllBytes();
+        }
         ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
 
         for (int i = 0; i < 1000; i++) {

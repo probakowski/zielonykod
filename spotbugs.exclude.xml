@@ -2,8 +2,13 @@
 <FindBugsFilter>
     <Match>
         <Class name="~.*\._[^.]+"/>
+        <Bug code="NP" />
     </Match>
     <Match>
-        <Bug code="EI"/>
+        <Bug code="EI,EI2"/>
+    </Match>
+    <Match>
+        <Class name="~.*(Atm|Game)Handler"/>
+        <Bug code="NP"/>
     </Match>
 </FindBugsFilter>
