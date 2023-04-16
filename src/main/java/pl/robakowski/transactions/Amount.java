@@ -9,6 +9,13 @@ public class Amount {
     long l;
     BigDecimal bd;
 
+    public Amount(Amount amount) {
+        if (amount != null) {
+            l = amount.l;
+            bd = amount.bd;
+        }
+    }
+
     public Amount(long l, BigDecimal bd) {
         this.l = l;
         this.bd = bd;

@@ -3,8 +3,6 @@ package pl.robakowski.transactions;
 import com.dslplatform.json.CompiledJson;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-
 @CompiledJson
 public class Account implements Comparable<Account> {
 
@@ -21,7 +19,7 @@ public class Account implements Comparable<Account> {
         this.account = account;
         this.debitCount = debitCount;
         this.creditCount = creditCount;
-        this.balance = balance;
+        this.balance = new Amount(balance);
     }
 
     public String getAccount() {
@@ -37,7 +35,7 @@ public class Account implements Comparable<Account> {
     }
 
     public Amount getBalance() {
-        return balance;
+        return new Amount(balance);
     }
 
     public void credit(Amount amount) {
@@ -65,6 +63,6 @@ public class Account implements Comparable<Account> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(account);
+        return account.hashCode();
     }
 }

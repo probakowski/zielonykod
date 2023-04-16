@@ -1,5 +1,6 @@
 package pl.robakowski.game;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,6 +13,6 @@ public class Group {
     }
 
     public List<Clan> getClans() {
-        return clans;
+        return Collections.unmodifiableList(clans);
     }
 }

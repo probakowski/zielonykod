@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
     <Match>
+        <!-- False positives in generated classes -->
         <Class name="~.*\._[^.]+"/>
-        <Bug code="NP" />
+        <Bug code="NP, RCN"/>
     </Match>
     <Match>
-        <Bug code="EI,EI2"/>
-    </Match>
-    <Match>
+        <!-- Writers in handlers will always be found - they are generated -->
         <Class name="~.*(Atm|Game)Handler"/>
         <Bug code="NP"/>
     </Match>

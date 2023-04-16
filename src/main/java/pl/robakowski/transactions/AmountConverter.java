@@ -7,7 +7,7 @@ import com.dslplatform.json.JsonWriter;
 import java.math.BigDecimal;
 
 @JsonConverter(target = Amount.class)
-public final class AmountConverter {
+public class AmountConverter {
 
     public static final JsonReader.ReadObject<Amount> JSON_READER = reader -> {
         int start = reader.getCurrentIndex();

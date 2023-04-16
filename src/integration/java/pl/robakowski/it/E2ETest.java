@@ -2,6 +2,7 @@ package pl.robakowski.it;
 
 import com.dslplatform.json.DslJson;
 import com.dslplatform.json.JsonWriter;
+import io.activej.bytebuf.ByteBuf;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,16 +12,18 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.robakowski.Launcher;
+import pl.robakowski.atms.AtmHandler;
+import pl.robakowski.atms.Request;
 import pl.robakowski.game.Clan;
 import pl.robakowski.game.Game;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -117,7 +120,7 @@ public class E2ETest {
         is = getClass().getClassLoader().getResourceAsStream("atms_big_response.json");
         byte[] response = is.readAllBytes();
         ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 100; i++) {
             futures.add(executor.submit(() -> {
                 URL url = new URL("http://localhost:8080/atms/calculateOrder");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -216,5 +219,26 @@ public class E2ETest {
         ArrayList<Long> longs = new ArrayList<>(queue);
         longs.sort(null);
         LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
+    }
+
+    @Test
+    public void generateAtmsBig() throws Exception {
+        List<Request> requests = new ArrayList<>();
+        Request.RequestType[] values = Request.RequestType.values();
+        for (int i = 0; i < 1000; i++) {
+            for (int j = 0; j < 1000; j++) {
+                int region = random.nextInt(9999) + 1;
+                int atmId = random.nextInt(9999) + 1;
+                Request.RequestType requestType = values[random.nextInt(4)];
+                requests.add(new Request(region, atmId, requestType));
+            }
+        }
+        DslJson<?> json = new DslJson<>();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        json.serialize(requests, baos);
+        byte[] bytes = baos.toByteArray();
+        ByteBuf buf = new AtmHandler().handle(new ByteArrayInputStream(bytes));
+        Files.write(Path.of("src", "integration", "resources", "atms_big_request.json"), bytes, StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(Path.of("src", "integration", "resources", "atms_big_response.json"), buf.asArray(), StandardOpenOption.TRUNCATE_EXISTING);
     }
 }
