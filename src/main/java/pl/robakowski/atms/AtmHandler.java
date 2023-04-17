@@ -6,10 +6,11 @@ import pl.robakowski.Handler;
 import java.io.InputStream;
 import java.util.*;
 
+
 public class AtmHandler extends Handler {
 
     private static final JsonWriter.WriteObject<Atm> atmWriter = Objects.requireNonNull(json.tryFindWriter(Atm.class));
-    private static final int requestTypesCount = Request.RequestType.values().length;
+    private static final int requestTypesCount = 4;
     private static final int maxRegionNumber = 9999;
     private static final int bucketsCount = requestTypesCount * (maxRegionNumber + 1);
 
@@ -34,11 +35,7 @@ public class AtmHandler extends Handler {
         List<Atm> atms = new ArrayList<>(i);
         for (int j = 0; j < buckets.length; j += requestTypesCount) {
             HashSet<Atm> visited = new HashSet<>(estimatedAtmsPerRegion);
-            if (buckets[j] != null) {
-                atms.addAll(buckets[j]);
-                visited.addAll(buckets[j]);
-            }
-            for (int k = 1; k < requestTypesCount; k++) {
+            for (int k = 0; k < requestTypesCount; k++) {
                 if (buckets[j + k] != null) {
                     for (Atm atm : buckets[j + k]) {
                         if (visited.add(atm)) {

@@ -42,14 +42,16 @@ public class E2ETest {
 
     @BeforeAll
     public static void startServer() throws Exception {
-        new Thread(() -> {
-            try {
-                launcher.launch(new String[0]);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }).start();
-        launcher.getStartFuture().toCompletableFuture().get();
+        if (System.getProperty("start_server", "true").equals("true")) {
+            new Thread(() -> {
+                try {
+                    launcher.launch(new String[0]);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
+            launcher.getStartFuture().toCompletableFuture().get();
+        }
     }
 
     @AfterAll
@@ -84,6 +86,7 @@ public class E2ETest {
                 URL url = new URL("http://localhost:8080/onlinegame/calculate");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/json");
                 con.setDoOutput(true);
 
                 long start = System.currentTimeMillis();
@@ -125,6 +128,44 @@ public class E2ETest {
                 URL url = new URL("http://localhost:8080/atms/calculateOrder");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setDoOutput(true);
+
+                long start = System.currentTimeMillis();
+
+                try (OutputStream os = con.getOutputStream()) {
+                    os.write(request);
+                }
+
+                try (InputStream isr = con.getInputStream()) {
+                    byte[] actual = isr.readAllBytes();
+                    queue.add(System.currentTimeMillis() - start);
+//                    Assertions.assertArrayEquals(actual, response);
+                }
+                return null;
+            }));
+        }
+        waitForAllTasks(futures);
+        ArrayList<Long> longs = new ArrayList<>(queue);
+        longs.sort(null);
+        LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
+    }
+
+    @Test
+    public void testAtmsMultithreaded2() throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        List<Future<Void>> futures = new ArrayList<>();
+        InputStream is = getClass().getClassLoader().getResourceAsStream("atms_big2_request.json");
+        byte[] request = is.readAllBytes();
+        is = getClass().getClassLoader().getResourceAsStream("atms_big2_response.json");
+        byte[] response = is.readAllBytes();
+        ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
+        for (int i = 0; i < 1000; i++) {
+            futures.add(executor.submit(() -> {
+                URL url = new URL("http://localhost:8080/atms/calculateOrder");
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-Type", "application/json");
                 con.setDoOutput(true);
 
                 long start = System.currentTimeMillis();
@@ -225,8 +266,8 @@ public class E2ETest {
     public void generateAtmsBig() throws Exception {
         List<Request> requests = new ArrayList<>();
         Request.RequestType[] values = Request.RequestType.values();
-        for (int i = 0; i < 1000; i++) {
-            for (int j = 0; j < 1000; j++) {
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 100; j++) {
                 int region = random.nextInt(9999) + 1;
                 int atmId = random.nextInt(9999) + 1;
                 Request.RequestType requestType = values[random.nextInt(4)];
@@ -238,7 +279,7 @@ public class E2ETest {
         json.serialize(requests, baos);
         byte[] bytes = baos.toByteArray();
         ByteBuf buf = new AtmHandler().handle(new ByteArrayInputStream(bytes));
-        Files.write(Path.of("src", "integration", "resources", "atms_big_request.json"), bytes, StandardOpenOption.TRUNCATE_EXISTING);
-        Files.write(Path.of("src", "integration", "resources", "atms_big_response.json"), buf.asArray(), StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(Path.of("src", "integration", "resources", "atms_big2_request.json"), bytes, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE_NEW);
+        Files.write(Path.of("src", "integration", "resources", "atms_big2_response.json"), buf.asArray(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE_NEW);
     }
 }

@@ -12,5 +12,3 @@ Priorytetowe planowane zasilenie bankomatu dotyczy urządzenia gdzie trend zuży
 Przygotuj system który przygotuje odpowiednią kolejność zleceń do obsługi dla grupy konwojowej, przy założeniu że:
 1)	konwój przejeżdża przez regiony biorąc pod uwagę rosnącą kolejność przydzielonych im numerów,
 2)	dany bankomat na liście zleceń dla grupy konwojowej może wystąpić tylko raz.
-
-
