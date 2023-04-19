@@ -7,23 +7,23 @@ import org.jetbrains.annotations.NotNull;
 @CompiledJson
 public class Account implements Comparable<Account> {
 
-    private final String account;
+    private final AccountNumber account;
     private int debitCount;
     private int creditCount;
     private long balance;
 
-    public Account(String account) {
+    public Account(AccountNumber account) {
         this.account = account;
     }
 
-    public Account(String account, int debitCount, int creditCount, long balance) {
+    public Account(AccountNumber account, int debitCount, int creditCount, long balance) {
         this.account = account;
         this.debitCount = debitCount;
         this.creditCount = creditCount;
         this.balance = balance;
     }
 
-    public String getAccount() {
+    public AccountNumber getAccount() {
         return account;
     }
 
