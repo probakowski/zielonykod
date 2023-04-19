@@ -6,12 +6,13 @@ import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.NumberConverter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+
 public record AccountNumber(long l1, long l2) implements Comparable<AccountNumber> {
 
     @Override
     public int compareTo(@NotNull AccountNumber o) {
-        int diff = Long.compare(l1, o.l1);
-        return diff != 0 ? diff : Long.compare(l2, o.l2);
+        return Arrays.compare(new long[]{l1, l2}, new long[]{o.l1, o.l2});
     }
 
     @JsonConverter(target = AccountNumber.class)
