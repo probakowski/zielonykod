@@ -2,10 +2,11 @@ plugins {
     id("java")
     id("application")
     id("com.github.spotbugs") version "5.0.14"
+//    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+group = "pl.robakowski"
+version = "1.0"
 
 repositories {
     mavenCentral()

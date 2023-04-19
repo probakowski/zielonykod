@@ -3,10 +3,7 @@ package pl.robakowski.it;
 import com.dslplatform.json.DslJson;
 import com.dslplatform.json.JsonWriter;
 import io.activej.bytebuf.ByteBuf;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -39,6 +36,8 @@ public class E2ETest {
     private static final Logger LOGGER = LoggerFactory.getLogger(E2ETest.class);
 
     private static final Random random = new SecureRandom(new byte[]{35, 32, 56, 45, 62});
+
+    private static final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     @BeforeAll
     public static void startServer() throws Exception {
@@ -120,8 +119,6 @@ public class E2ETest {
         List<Future<Void>> futures = new ArrayList<>();
         InputStream is = getClass().getClassLoader().getResourceAsStream("atms_big_request.json");
         byte[] request = is.readAllBytes();
-        is = getClass().getClassLoader().getResourceAsStream("atms_big_response.json");
-        byte[] response = is.readAllBytes();
         ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
         for (int i = 0; i < 1000; i++) {
             futures.add(executor.submit(() -> {
@@ -138,9 +135,8 @@ public class E2ETest {
                 }
 
                 try (InputStream isr = con.getInputStream()) {
-                    byte[] actual = isr.readAllBytes();
+                    isr.readAllBytes();
                     queue.add(System.currentTimeMillis() - start);
-//                    Assertions.assertArrayEquals(actual, response);
                 }
                 return null;
             }));
@@ -153,12 +149,10 @@ public class E2ETest {
 
     @Test
     public void testAtmsMultithreaded2() throws Exception {
-        ExecutorService executor = Executors.newFixedThreadPool(10);
+        String name = "atms_big2_request.json";
         List<Future<Void>> futures = new ArrayList<>();
-        InputStream is = getClass().getClassLoader().getResourceAsStream("atms_big2_request.json");
+        InputStream is = getClass().getClassLoader().getResourceAsStream(name);
         byte[] request = is.readAllBytes();
-        is = getClass().getClassLoader().getResourceAsStream("atms_big2_response.json");
-        byte[] response = is.readAllBytes();
         ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
         for (int i = 0; i < 1000; i++) {
             futures.add(executor.submit(() -> {
@@ -175,9 +169,8 @@ public class E2ETest {
                 }
 
                 try (InputStream isr = con.getInputStream()) {
-                    byte[] actual = isr.readAllBytes();
+                    isr.readAllBytes();
                     queue.add(System.currentTimeMillis() - start);
-//                    Assertions.assertArrayEquals(actual, response);
                 }
                 return null;
             }));
@@ -262,6 +255,7 @@ public class E2ETest {
         LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
     }
 
+    @Disabled("only used for data generation")
     @Test
     public void generateAtmsBig() throws Exception {
         List<Request> requests = new ArrayList<>();

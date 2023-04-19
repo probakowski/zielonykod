@@ -1,6 +1,7 @@
 package pl.robakowski.transactions;
 
 import com.dslplatform.json.CompiledJson;
+import com.dslplatform.json.JsonAttribute;
 import org.jetbrains.annotations.NotNull;
 
 @CompiledJson
@@ -9,17 +10,17 @@ public class Account implements Comparable<Account> {
     private final String account;
     private int debitCount;
     private int creditCount;
-    private Amount balance = new Amount(0, null);
+    private long balance;
 
     public Account(String account) {
         this.account = account;
     }
 
-    public Account(String account, int debitCount, int creditCount, Amount balance) {
+    public Account(String account, int debitCount, int creditCount, long balance) {
         this.account = account;
         this.debitCount = debitCount;
         this.creditCount = creditCount;
-        this.balance = new Amount(balance);
+        this.balance = balance;
     }
 
     public String getAccount() {
@@ -34,18 +35,19 @@ public class Account implements Comparable<Account> {
         return creditCount;
     }
 
-    public Amount getBalance() {
-        return new Amount(balance);
+    @JsonAttribute(converter = AmountConverter.class)
+    public long getBalance() {
+        return balance;
     }
 
-    public void credit(Amount amount) {
+    public void credit(long amount) {
         creditCount++;
-        balance.add(amount);
+        balance += amount;
     }
 
-    public void debit(Amount amount) {
+    public void debit(long amount) {
         debitCount++;
-        balance.sub(amount);
+        balance += amount;
     }
 
     @Override

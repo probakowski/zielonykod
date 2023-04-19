@@ -20,7 +20,7 @@ public class TransactionsHandler extends Handler {
             Transaction transaction = transactions.next();
             Account debitAccount = accountsMap.computeIfAbsent(transaction.creditAccount(), Account::new);
             Account creditAccount = accountsMap.computeIfAbsent(transaction.debitAccount(), Account::new);
-            Amount amount = transaction.amount();
+            long amount = transaction.amount();
             debitAccount.credit(amount);
             creditAccount.debit(amount);
         }

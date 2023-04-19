@@ -18,12 +18,12 @@ public class AtmHandler extends Handler {
     protected void handle(InputStream is, JsonWriter writer) throws Exception {
         List<Atm>[] buckets = new List[bucketsCount];
         Iterator<Request> requests = json.iterateOver(Request.class, is);
-        int i = 0;
+        int requestsCount = 0;
         if (requests == null) {
             requests = Collections.emptyIterator();
         }
         while (requests.hasNext()) {
-            i++;
+            requestsCount++;
             Request request = requests.next();
             int region = request.getRegion() * requestTypesCount + request.getRequestType().ordinal();
             if (buckets[region] == null) {
@@ -31,14 +31,13 @@ public class AtmHandler extends Handler {
             }
             buckets[region].add(request);
         }
-        int estimatedAtmsPerRegion = i / maxRegionNumber;
-        List<Atm> atms = new ArrayList<>(i);
-        for (int j = 0; j < buckets.length; j += requestTypesCount) {
-            HashSet<Atm> visited = new HashSet<>(estimatedAtmsPerRegion);
-            for (int k = 0; k < requestTypesCount; k++) {
-                if (buckets[j + k] != null) {
-                    for (Atm atm : buckets[j + k]) {
-                        if (visited.add(atm)) {
+        List<Atm> atms = new ArrayList<>(requestsCount);
+        for (int i = 0; i < buckets.length; i += requestTypesCount) {
+            BitSet visited = new BitSet();
+            for (int j = 0; j < requestTypesCount; j++) {
+                if (buckets[i + j] != null) {
+                    for (Atm atm : buckets[i + j]) {
+                        if (visited.set(atm.getAtmId())) {
                             atms.add(atm);
                         }
                     }

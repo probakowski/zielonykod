@@ -9,6 +9,7 @@ import io.activej.http.*;
 import io.activej.inject.annotation.Provides;
 import io.activej.launchers.http.HttpServerLauncher;
 import io.activej.promise.Promise;
+import org.slf4j.LoggerFactory;
 import pl.robakowski.atms.AtmHandler;
 import pl.robakowski.game.GameHandler;
 import pl.robakowski.transactions.TransactionsHandler;
@@ -49,6 +50,7 @@ public class Launcher extends HttpServerLauncher {
     }
 
     public static void main(String[] args) throws Exception {
+        LoggerFactory.getLogger(Launcher.class).info("Starting");
         Launcher launcher = new Launcher();
         launcher.launch(args);
     }
