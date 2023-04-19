@@ -17,21 +17,21 @@ public record AccountNumber(long l1, long l2) implements Comparable<AccountNumbe
     @JsonConverter(target = AccountNumber.class)
     public static class AccountNumberConverter {
         public static final JsonReader.ReadObject<AccountNumber> JSON_READER = reader -> {
-            long l1 = 0;
-            long l2 = 0;
             if (reader.last() != '"') {
                 throw reader.newParseError("Expecting '\"' for string start");
             }
+            long l1 = 0;
             for (int i = 0; i < 13; i++) {
-                l1 = l1 * 10 + reader.read() - '0';
+                l1 = l1 * 10 + reader.read();
             }
+            long l2 = 0;
             for (int i = 0; i < 13; i++) {
-                l2 = l2 * 10 + reader.read() - '0';
+                l2 = l2 * 10 + reader.read();
             }
             if (reader.read() != '"') {
                 throw reader.newParseError("Expecting '\"' for string end");
             }
-            return new AccountNumber(l1, l2);
+            return new AccountNumber(l1 - 1570548400, l2 - 1570548400);
         };
 
         public static final JsonWriter.WriteObject<AccountNumber> JSON_WRITER = (writer, value) -> {
