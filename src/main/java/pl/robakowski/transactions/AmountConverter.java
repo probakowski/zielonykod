@@ -8,9 +8,9 @@ public class AmountConverter {
 
     public static final JsonReader.ReadObject<Long> JSON_READER = reader -> {
         double v = NumberConverter.deserializeDouble(reader);
-        if (v > 922337203684.99d) {
-            String description = String.format("amount %.2f is too big, should be less than 922337203685", v);
-            throw reader.newParseError(description, reader.getCurrentIndex());
+        if (v > 922337203685d) {
+            String description = String.format("amount %.2f is too big, should be less than or equal 922337203685", v);
+            throw reader.newParseError(description);
         }
         return (long) (v * 100);
     };
