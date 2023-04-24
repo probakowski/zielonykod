@@ -11,14 +11,18 @@ public class AmountConverter {
 
     public static final JsonReader.ReadObject<Long> JSON_READER = reader -> {
         BigDecimal bd = NumberConverter.deserializeDecimal(reader).setScale(2, RoundingMode.HALF_DOWN);
-        return bd.unscaledValue().longValueExact();
+        try {
+            return bd.unscaledValue().longValueExact();
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("Transaction amount is not in supported range");
+        }
     };
 
     public static final JsonWriter.WriteObject<Long> JSON_WRITER = (writer, value) -> {
         if (value == null) {
             writer.writeNull();
-            return;
+        } else {
+            NumberConverter.serialize(BigDecimal.valueOf(value, 2), writer);
         }
-        NumberConverter.serialize(BigDecimal.valueOf(value, 2), writer);
     };
 }
