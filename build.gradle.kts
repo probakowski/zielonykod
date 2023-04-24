@@ -22,19 +22,35 @@ tasks.test {
     maxHeapSize = "2048m"
 }
 
-with(sourceSets.create("integration")) {
+val integration: SourceSet by sourceSets.creating
+
+configurations[integration.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
+configurations[integration.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
+
+with(integration) {
     java.srcDir("src/integration/java")
     compileClasspath += sourceSets.main.get().output
 }
 
-configurations {
-    get("integrationImplementation").apply {
-        extendsFrom(configurations.testImplementation.get())
-    }
-    get("integrationRuntimeOnly").apply {
-        extendsFrom(configurations.testRuntimeOnly.get())
-    }
+val e2eTestTask = tasks.register<Test>("e2eTest") {
+    description = "Runs E2E tests."
+    group = "verification"
+    useJUnitPlatform()
+
+    testClassesDirs = integration.output.classesDirs
+    classpath =
+        configurations[integration.runtimeClasspathConfigurationName] + integration.output + sourceSets.main.get().output
+
+    shouldRunAfter(tasks.test)
+
+    minHeapSize = "2G"
+    maxHeapSize = "2G"
 }
+
+tasks.check {
+    dependsOn(e2eTestTask)
+}
+
 
 spotbugs {
     excludeFilter.set(file("spotbugs.exclude.xml"))
