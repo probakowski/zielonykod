@@ -42,12 +42,20 @@ public class Account implements Comparable<Account> {
 
     public void credit(long amount) {
         creditCount++;
-        balance += amount;
+        try {
+            balance = Math.addExact(balance, amount);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("Balance is bigger than " + Long.MAX_VALUE / 100);
+        }
     }
 
     public void debit(long amount) {
         debitCount++;
-        balance += amount;
+        try {
+            balance = Math.subtractExact(balance, amount);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("Balance is smaller than " + Long.MIN_VALUE / 100);
+        }
     }
 
     @Override

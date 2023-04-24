@@ -4,15 +4,14 @@ import com.dslplatform.json.JsonReader;
 import com.dslplatform.json.JsonWriter;
 import com.dslplatform.json.NumberConverter;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class AmountConverter {
 
     public static final JsonReader.ReadObject<Long> JSON_READER = reader -> {
-        double v = NumberConverter.deserializeDouble(reader);
-        if (v > 922337203685d) {
-            String description = String.format("amount %.2f is too big, should be less than or equal 922337203685", v);
-            throw reader.newParseError(description);
-        }
-        return (long) (v * 100);
+        BigDecimal bd = NumberConverter.deserializeDecimal(reader).setScale(2, RoundingMode.HALF_DOWN);
+        return bd.unscaledValue().longValueExact();
     };
 
     public static final JsonWriter.WriteObject<Long> JSON_WRITER = (writer, value) -> {
@@ -20,18 +19,6 @@ public class AmountConverter {
             writer.writeNull();
             return;
         }
-        long l = value / 100;
-        String s = Long.toString(l);
-        if (value < 0 && l == 0) {
-            writer.writeByte((byte) '-');
-        }
-        writer.writeAscii(s);
-        writer.writeByte((byte) '.');
-        long a = Math.abs(value % 100);
-        if (a < 10) {
-            writer.writeAscii(new byte[]{'0', (byte) (a + '0')});
-        } else {
-            writer.writeAscii(new byte[]{(byte) ((a / 10) + '0'), (byte) (a % 10 + '0')});
-        }
+        NumberConverter.serialize(BigDecimal.valueOf(value, 2), writer);
     };
 }
