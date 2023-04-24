@@ -9,7 +9,7 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AmountTest {
-    
+
     @Test
     public void checkDouble() {
         for (long i = 92233000000000L; i < 92233720368500L; i++) {
