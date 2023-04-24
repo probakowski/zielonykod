@@ -4,7 +4,10 @@ import com.dslplatform.json.JsonWriter;
 import pl.robakowski.Handler;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 
 
 public class AtmHandler extends Handler {
@@ -20,7 +23,8 @@ public class AtmHandler extends Handler {
         Iterator<Request> requests = json.iterateOver(Request.class, is);
         int requestsCount = 0;
         if (requests == null) {
-            requests = Collections.emptyIterator();
+            writer.writeAscii("[]");
+            return;
         }
         while (requests.hasNext()) {
             requestsCount++;
