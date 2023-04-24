@@ -25,10 +25,7 @@ public class AmountConverter {
         if (value < 0 && l == 0) {
             writer.writeByte((byte) '-');
         }
-        int length = s.length();
-        for (int i = 0; i < length; i++) {
-            writer.writeByte((byte) s.charAt(i));
-        }
+        writer.writeAscii(s);
         writer.writeByte((byte) '.');
         long a = Math.abs(value % 100);
         if (a < 10) {
