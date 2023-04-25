@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-build/install/zielonykod/bin/zielonykod
+./build/install/zielonykod/bin/zielonykod
