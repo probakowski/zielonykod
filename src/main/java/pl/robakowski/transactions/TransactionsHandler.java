@@ -22,11 +22,11 @@ public class TransactionsHandler extends Handler {
         HashMap<AccountNumber, Account> accountsMap = new HashMap<>(135000);
         while (transactions.hasNext()) {
             Transaction transaction = transactions.next();
-            Account debitAccount = accountsMap.computeIfAbsent(transaction.creditAccount(), Account::new);
-            Account creditAccount = accountsMap.computeIfAbsent(transaction.debitAccount(), Account::new);
+            Account creditAccount = accountsMap.computeIfAbsent(transaction.creditAccount(), Account::new);
+            Account debitAccount = accountsMap.computeIfAbsent(transaction.debitAccount(), Account::new);
             long amount = transaction.amount();
-            debitAccount.credit(amount);
-            creditAccount.debit(amount);
+            creditAccount.credit(amount);
+            debitAccount.debit(amount);
         }
 
         List<Account> accounts = new ArrayList<>(accountsMap.values());
