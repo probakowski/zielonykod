@@ -6,7 +6,6 @@ import io.activej.csp.ChannelSupplier;
 import io.activej.csp.ChannelSuppliers;
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncServlet;
-import io.activej.http.HttpMethod;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
@@ -25,10 +24,11 @@ import java.util.concurrent.Executors;
 import static io.activej.http.ContentTypes.JSON_UTF_8;
 import static io.activej.http.HttpHeaderValue.ofContentType;
 import static io.activej.http.HttpHeaders.CONTENT_TYPE;
+import static io.activej.http.HttpMethod.POST;
 
 public class Launcher extends HttpServerLauncher {
 
-    private static final Executor executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private static final Executor POOL = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     @Provides
     AsyncServlet servlet(Eventloop eventloop) {
@@ -37,14 +37,14 @@ public class Launcher extends HttpServerLauncher {
         GameHandler gameHandler = new GameHandler();
         TransactionsHandler transactionsHandler = new TransactionsHandler();
         return RoutingServlet.create()
-                .map(HttpMethod.POST, "/atms/calculateOrder", request -> handle(request, atmHandler, eventloop))
-                .map(HttpMethod.POST, "/onlinegame/calculate", request -> handle(request, gameHandler, eventloop))
-                .map(HttpMethod.POST, "/transactions/report", request -> handle(request, transactionsHandler, eventloop));
+                .map(POST, "/atms/calculateOrder", request -> handle(request, atmHandler, eventloop))
+                .map(POST, "/onlinegame/calculate", request -> handle(request, gameHandler, eventloop))
+                .map(POST, "/transactions/report", request -> handle(request, transactionsHandler, eventloop));
     }
 
     private static Promise<HttpResponse> handle(HttpRequest request, Handler handler, Eventloop eventloop) {
         ChannelSupplier<ByteBuf> body = request.takeBodyStream();
-        return Promise.ofBlocking(executor, () -> {
+        return Promise.ofBlocking(POOL, () -> {
             try (InputStream is = ChannelSuppliers.channelSupplierAsInputStream(eventloop, body)) {
                 return handler.handle(is);
             }

@@ -4,6 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
+/**
+ * This class represents 26-digits account number as two 13-digits limbs.
+ * Natural ordering is in lexicographical order.
+ */
 public record AccountNumber(long l1, long l2) implements Comparable<AccountNumber> {
 
     @Override

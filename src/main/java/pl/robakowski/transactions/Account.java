@@ -35,6 +35,9 @@ public class Account implements Comparable<Account> {
         return creditCount;
     }
 
+    /**
+     * @return balance of this account expressed in 1/100ths of base currency.
+     */
     @JsonAttribute(converter = AmountConverter.class)
     public long getBalance() {
         return balance;
