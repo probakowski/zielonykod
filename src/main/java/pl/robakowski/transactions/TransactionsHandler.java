@@ -15,7 +15,7 @@ public class TransactionsHandler extends Handler {
             transactions = Collections.emptyIterator();
         }
 
-        HashMap<AccountNumber, Account> accountsMap = new HashMap<>();
+        HashMap<AccountNumber, Account> accountsMap = new HashMap<>(135000);
         while (transactions.hasNext()) {
             Transaction transaction = transactions.next();
             Account debitAccount = accountsMap.computeIfAbsent(transaction.creditAccount(), Account::new);

@@ -1,8 +1,5 @@
 package pl.robakowski.transactions;
 
-import com.dslplatform.json.JsonConverter;
-import com.dslplatform.json.JsonReader;
-import com.dslplatform.json.JsonWriter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;

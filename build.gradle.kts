@@ -45,6 +45,7 @@ val e2eTask = tasks.register<Test>("e2e") {
 
     minHeapSize = "8G"
     maxHeapSize = "8G"
+    jvmArgs("-server")
 }
 
 spotbugs {
