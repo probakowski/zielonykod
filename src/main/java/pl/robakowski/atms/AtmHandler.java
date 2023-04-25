@@ -7,12 +7,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 
 public class AtmHandler extends Handler {
 
-    private static final JsonWriter.WriteObject<Atm> atmWriter = Objects.requireNonNull(json.tryFindWriter(Atm.class));
     private static final int REQUEST_TYPES_COUNT = 4;
     private static final int MAX_REGION_NUMBER = 9999;
     private static final int BUCKETS_COUNT = REQUEST_TYPES_COUNT * (MAX_REGION_NUMBER + 1);
@@ -29,11 +27,11 @@ public class AtmHandler extends Handler {
         while (requests.hasNext()) {
             requestsCount++;
             Request request = requests.next();
-            int region = request.getRegion() * REQUEST_TYPES_COUNT + request.getRequestType().ordinal();
+            int region = request.region() * REQUEST_TYPES_COUNT + request.requestType().ordinal();
             if (buckets[region] == null) {
                 buckets[region] = new ArrayList<>();
             }
-            buckets[region].add(request);
+            buckets[region].add(new Atm(request.region(), request.atmId()));
         }
         List<Atm> atms = new ArrayList<>(requestsCount);
         for (int i = 0; i < buckets.length; i += REQUEST_TYPES_COUNT) {
@@ -41,13 +39,13 @@ public class AtmHandler extends Handler {
             for (int j = 0; j < REQUEST_TYPES_COUNT; j++) {
                 if (buckets[i + j] != null) {
                     for (Atm atm : buckets[i + j]) {
-                        if (visited.set(atm.getAtmId())) {
+                        if (visited.set(atm.atmId())) {
                             atms.add(atm);
                         }
                     }
                 }
             }
         }
-        writer.serialize(atms, atmWriter);
+        json.serialize(writer, atms);
     }
 }

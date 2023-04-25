@@ -7,7 +7,7 @@
     </Match>
     <Match>
         <!-- Writers in handlers will always be found - they are generated -->
-        <Class name="~.*(Atm|Game)Handler"/>
+        <Class name="~.*GameHandler"/>
         <Bug code="NP"/>
     </Match>
 </FindBugsFilter>
