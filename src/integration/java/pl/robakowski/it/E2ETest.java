@@ -96,7 +96,7 @@ public class E2ETest {
             futures.add(executor.submit(() -> doRequest(path, name + "_request.json", name + "_response.json")));
         }
         List<Long> longs = waitForAllTasks(futures);
-        LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
+        LOGGER.info("90% line for " + name + ":" + longs.get((int) (longs.size() * 0.9)) + "ms");
     }
 
     private static List<Long> waitForAllTasks(List<Future<Long>> futures) throws Exception {
@@ -115,10 +115,12 @@ public class E2ETest {
         con.setRequestProperty("Content-Type", "application/json");
         con.setDoOutput(true);
 
-        long start = System.currentTimeMillis();
+        long start;
         try (OutputStream os = con.getOutputStream();
              InputStream is = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(requestFile))) {
-            is.transferTo(os);
+            byte[] req = is.readAllBytes();
+            start = System.currentTimeMillis();
+            os.write(req);
         }
 
         byte[] response;
