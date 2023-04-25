@@ -6,11 +6,14 @@ import pl.robakowski.Handler;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 public class TransactionsHandler extends Handler {
+
+    public static final Comparator<Account> COMPARATOR = Comparator.comparing(Account::getAccount);
 
     @Override
     protected void handle(InputStream is, JsonWriter writer) throws Exception {
@@ -30,7 +33,7 @@ public class TransactionsHandler extends Handler {
         }
 
         List<Account> accounts = new ArrayList<>(accountsMap.values());
-        accounts.sort(null);
+        accounts.sort(COMPARATOR);
         json.serialize(writer, accounts);
     }
 }

@@ -2,10 +2,9 @@ package pl.robakowski.transactions;
 
 import com.dslplatform.json.CompiledJson;
 import com.dslplatform.json.JsonAttribute;
-import org.jetbrains.annotations.NotNull;
 
 @CompiledJson
-public class Account implements Comparable<Account> {
+public class Account {
 
     private final AccountNumber account;
     private int debitCount;
@@ -59,23 +58,5 @@ public class Account implements Comparable<Account> {
         } catch (ArithmeticException e) {
             throw new IllegalArgumentException("Balance is smaller than " + Long.MIN_VALUE / 100);
         }
-    }
-
-    @Override
-    public int compareTo(@NotNull Account account) {
-        return this.account.compareTo(account.account);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Account account1 = (Account) o;
-        return account.equals(account1.account);
-    }
-
-    @Override
-    public int hashCode() {
-        return account.hashCode();
     }
 }
