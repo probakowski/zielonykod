@@ -1,7 +1,6 @@
 package pl.robakowski.it;
 
 import com.dslplatform.json.DslJson;
-import com.dslplatform.json.JsonWriter;
 import io.activej.bytebuf.ByteBuf;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import pl.robakowski.Launcher;
 import pl.robakowski.atms.AtmHandler;
 import pl.robakowski.atms.Request;
-import pl.robakowski.game.Clan;
-import pl.robakowski.game.Game;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -26,18 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class E2ETest {
 
     private static final Launcher launcher = new Launcher();
     private static final Logger LOGGER = LoggerFactory.getLogger(E2ETest.class);
-
-    private static final Random random = new SecureRandom(new byte[]{35, 32, 56, 45, 62});
-
-    private static final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     @BeforeAll
     public static void startServer() throws Exception {
@@ -64,47 +57,9 @@ public class E2ETest {
         doRequest("onlinegame/calculate", name + "_request.json", name + "_response.json");
     }
 
-    private static final List<Game> GAMES = IntStream.range(0, 1000).mapToObj(i -> {
-        List<Clan> clans = IntStream.range(0, 20000)
-                .mapToObj(j -> new Clan(random.nextInt(999) + 1, random.nextInt(1000000)))
-                .collect(Collectors.toCollection(() -> new ArrayList<>(20000)));
-        return new Game(1000, clans.toArray(Clan[]::new));
-    }).toList();
-
     @Test
     public void testGameMultithreaded() throws Exception {
-        ExecutorService executor = Executors.newFixedThreadPool(10);
-        List<Future<Void>> futures = new ArrayList<>();
-
-        ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
-        DslJson<Object> json = new DslJson<>();
-        for (Game game : GAMES) {
-            JsonWriter writer = json.newWriter();
-            json.serialize(writer, game);
-            futures.add(executor.submit(() -> {
-                URL url = new URL("http://localhost:8080/onlinegame/calculate");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
-                con.setRequestProperty("Content-Type", "application/json");
-                con.setDoOutput(true);
-
-                long start = System.currentTimeMillis();
-
-                try (OutputStream os = new BufferedOutputStream(con.getOutputStream())) {
-                    writer.toStream(os);
-                }
-
-                try (InputStream isr = con.getInputStream()) {
-                    isr.readAllBytes();
-                    queue.add(System.currentTimeMillis() - start);
-                }
-                return null;
-            }));
-        }
-        waitForAllTasks(futures);
-        ArrayList<Long> longs = new ArrayList<>(queue);
-        longs.sort(null);
-        LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
+        testMultithreaded("onlinegame/calculate", "game_big");
     }
 
     @ParameterizedTest
@@ -115,84 +70,52 @@ public class E2ETest {
 
     @Test
     public void testAtmsMultithreaded() throws Exception {
-        ExecutorService executor = Executors.newFixedThreadPool(10);
-        List<Future<Void>> futures = new ArrayList<>();
-        InputStream is = getClass().getClassLoader().getResourceAsStream("atms_big_request.json");
-        byte[] request = is.readAllBytes();
-        ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
-        for (int i = 0; i < 1000; i++) {
-            futures.add(executor.submit(() -> {
-                URL url = new URL("http://localhost:8080/atms/calculateOrder");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
-                con.setRequestProperty("Content-Type", "application/json");
-                con.setDoOutput(true);
-
-                long start = System.currentTimeMillis();
-
-                try (OutputStream os = con.getOutputStream()) {
-                    os.write(request);
-                }
-
-                try (InputStream isr = con.getInputStream()) {
-                    isr.readAllBytes();
-                    queue.add(System.currentTimeMillis() - start);
-                }
-                return null;
-            }));
-        }
-        waitForAllTasks(futures);
-        ArrayList<Long> longs = new ArrayList<>(queue);
-        longs.sort(null);
-        LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
+        testMultithreaded("atms/calculateOrder", "atms_big");
     }
 
     @Test
     public void testAtmsMultithreaded2() throws Exception {
-        String name = "atms_big2_request.json";
-        List<Future<Void>> futures = new ArrayList<>();
-        InputStream is = getClass().getClassLoader().getResourceAsStream(name);
-        byte[] request = is.readAllBytes();
-        ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
+        testMultithreaded("atms/calculateOrder", "atms_big2");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"transactions1", "transactions_big"})
+    public void testTransactions(String name) throws Exception {
+        doRequest("transactions/report", name + "_request.json", name + "_response.json");
+    }
+
+    @Test
+    public void testTransactionsMultithreaded() throws Exception {
+        testMultithreaded("transactions/report", "transactions_big");
+    }
+
+    private void testMultithreaded(String path, String name) throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        List<Future<Long>> futures = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            futures.add(executor.submit(() -> {
-                URL url = new URL("http://localhost:8080/atms/calculateOrder");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
-                con.setRequestProperty("Content-Type", "application/json");
-                con.setDoOutput(true);
-
-                long start = System.currentTimeMillis();
-
-                try (OutputStream os = con.getOutputStream()) {
-                    os.write(request);
-                }
-
-                try (InputStream isr = con.getInputStream()) {
-                    isr.readAllBytes();
-                    queue.add(System.currentTimeMillis() - start);
-                }
-                return null;
-            }));
+            futures.add(executor.submit(() -> doRequest(path, name + "_request.json", name + "_response.json")));
         }
-        waitForAllTasks(futures);
-        ArrayList<Long> longs = new ArrayList<>(queue);
-        longs.sort(null);
+        List<Long> longs = waitForAllTasks(futures);
         LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
     }
 
-    private static void waitForAllTasks(List<Future<Void>> futures) throws InterruptedException, ExecutionException {
-        for (Future<Void> future : futures) {
-            future.get();
+    private static List<Long> waitForAllTasks(List<Future<Long>> futures) throws Exception {
+        List<Long> timings = new ArrayList<>(futures.size());
+        for (Future<Long> future : futures) {
+            timings.add(future.get());
         }
+        timings.sort(null);
+        return timings;
     }
 
-    private void doRequest(String path, String requestFile, String responseFile) throws IOException {
+    private long doRequest(String path, String requestFile, String responseFile) throws IOException {
         URL url = new URL(String.format("http://localhost:8080/%s", path));
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
         con.setDoOutput(true);
 
+        long start = System.currentTimeMillis();
         try (OutputStream os = con.getOutputStream();
              InputStream is = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(requestFile))) {
             is.transferTo(os);
@@ -205,59 +128,20 @@ public class E2ETest {
             LOGGER.error(new String(con.getErrorStream().readAllBytes(), StandardCharsets.UTF_8));
             throw e;
         }
+        long time = System.currentTimeMillis() - start;
 
 
         try (InputStream is = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(responseFile))) {
             byte[] expected = is.readAllBytes();
             Assertions.assertArrayEquals(expected, response);
         }
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"transactions1", "transactions_big"})
-    public void testTransactions(String name) throws Exception {
-        doRequest("transactions/report", name + "_request.json", name + "_response.json");
-    }
-
-    @Test
-    public void testTransactionsMultithreaded() throws Exception {
-        ExecutorService executor = Executors.newFixedThreadPool(10);
-        List<Future<Void>> futures = new ArrayList<>();
-        byte[] request;
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream("transactions_big_request.json")) {
-            request = Objects.requireNonNull(is).readAllBytes();
-        }
-        ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
-
-        for (int i = 0; i < 1000; i++) {
-            futures.add(executor.submit(() -> {
-                URL url = new URL("http://localhost:8080/transactions/report");
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("POST");
-                con.setRequestProperty("Content-Type", "application/json");
-                con.setDoOutput(true);
-
-                long start = System.currentTimeMillis();
-                try (OutputStream os = con.getOutputStream()) {
-                    os.write(request);
-                }
-
-                try (InputStream isr = con.getInputStream()) {
-                    isr.readAllBytes();
-                }
-                queue.add(System.currentTimeMillis() - start);
-                return null;
-            }));
-        }
-        waitForAllTasks(futures);
-        ArrayList<Long> longs = new ArrayList<>(queue);
-        longs.sort(null);
-        LOGGER.info("90% line " + longs.get((int) (longs.size() * 0.9)) + "ms");
+        return time;
     }
 
     @Disabled("only used for data generation")
     @Test
     public void generateAtmsBig() throws Exception {
+        Random random = new SecureRandom();
         List<Request> requests = new ArrayList<>();
         Request.RequestType[] values = Request.RequestType.values();
         for (int i = 0; i < 100; i++) {
