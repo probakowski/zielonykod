@@ -62,7 +62,7 @@ public class E2ETest {
     @ParameterizedTest
     @ValueSource(strings = {"game1", "game_big"})
     public void testGame(String name) throws Exception {
-        doRequest("onlinegame/calculate", name + "_request.json", name + "_response.json");
+        doRequest("onlinegame/calculate", name);
     }
 
     @Test
@@ -73,7 +73,7 @@ public class E2ETest {
     @ParameterizedTest
     @ValueSource(strings = {"atms1", "atms2", "atms_big"})
     public void testAtms(String name) throws Exception {
-        doRequest("atms/calculateOrder", name + "_request.json", name + "_response.json");
+        doRequest("atms/calculateOrder", name);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class E2ETest {
     @ParameterizedTest
     @ValueSource(strings = {"transactions1", "transactions_big"})
     public void testTransactions(String name) throws Exception {
-        doRequest("transactions/report", name + "_request.json", name + "_response.json");
+        doRequest("transactions/report", name);
     }
 
     @Test
@@ -101,7 +101,7 @@ public class E2ETest {
         ExecutorService executor = Executors.newFixedThreadPool(10);
         List<Future<Long>> futures = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
-            futures.add(executor.submit(() -> doRequest(path, name + "_request.json", name + "_response.json")));
+            futures.add(executor.submit(() -> doRequest(path, name)));
         }
         List<Long> longs = waitForAllTasks(futures);
         LOGGER.info("90% line for " + name + ":" + longs.get((int) (longs.size() * 0.9)) + "ms");
@@ -116,7 +116,9 @@ public class E2ETest {
         return timings;
     }
 
-    private long doRequest(String path, String requestFile, String responseFile) throws IOException {
+    private long doRequest(String path, String name) throws IOException {
+        String requestFile = name + "_request.json";
+        String responseFile = name + "_response.json";
         URL url = new URL(String.format("http://localhost:8080/%s", path));
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");

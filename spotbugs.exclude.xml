@@ -5,9 +5,4 @@
         <Class name="~.*\._[^.]+"/>
         <Bug code="NP, RCN"/>
     </Match>
-    <Match>
-        <!-- Writers in handlers will always be found - they are generated -->
-        <Class name="~.*GameHandler"/>
-        <Bug code="NP"/>
-    </Match>
 </FindBugsFilter>

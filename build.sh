@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-./gradlew build installDist
+./gradlew clean build installDist

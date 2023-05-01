@@ -2,24 +2,24 @@ package pl.robakowski.game;
 
 import com.dslplatform.json.JsonWriter;
 import pl.robakowski.Handler;
+import pl.robakowski.game._Clan_DslJsonConverter.ObjectFormatConverter;
 
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 public class GameHandler extends Handler {
 
-    private static final JsonWriter.WriteObject<Clan> clanWriter = Objects.requireNonNull(json.tryFindWriter(Clan.class));
+    private static final ObjectFormatConverter CLAN_CONVERTER = new ObjectFormatConverter(json);
 
     static {
         json.registerWriter(Group.class, GameHandler::writeGroup);
     }
 
     private static void writeGroup(JsonWriter writer, Group value) {
-        writer.serialize(value != null ? value.getClans() : Collections.emptyList(), clanWriter);
+        writer.serialize(value != null ? value.getClans() : Collections.emptyList(), CLAN_CONVERTER);
     }
 
     @Override
