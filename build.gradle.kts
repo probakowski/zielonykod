@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("application")
     id("com.github.spotbugs") version "5.0.14"
+    id("me.champeau.jmh") version "0.7.1"
 }
 
 group = "pl.robakowski"
@@ -20,6 +21,13 @@ tasks.test {
     minHeapSize = "2048m"
     maxHeapSize = "2048m"
     useJUnitPlatform()
+}
+
+val jmhInclude = System.getenv("jmhInclude")
+if (jmhInclude != null) {
+    jmh {
+        includes.add(jmhInclude)
+    }
 }
 
 val integration: SourceSet by sourceSets.creating

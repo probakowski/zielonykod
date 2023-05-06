@@ -38,16 +38,21 @@ public class GameHandler extends Handler {
             Group group = new Group();
             groups.add(group);
             for (int i = 0; i < size; i++) {
+                if (available == 0) {
+                    break;
+                }
                 Clan next = clans[i];
-                if (next.numberOfPlayers() <= available) {
+                int numberOfPlayers = next.numberOfPlayers();
+                if (numberOfPlayers <= available) {
                     final int newSize;
+                    //borrowed from ArrayList.iterator().remove(), using plain array here gives ~10% speedup
                     if ((newSize = size - 1) > i) {
                         System.arraycopy(clans, i + 1, clans, i, newSize - i);
                     }
                     size = newSize;
                     i--;
                     group.add(next);
-                    available -= next.numberOfPlayers();
+                    available -= numberOfPlayers;
                 }
             }
         }
