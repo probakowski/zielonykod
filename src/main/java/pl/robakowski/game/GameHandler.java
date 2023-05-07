@@ -39,6 +39,7 @@ public class GameHandler extends Handler {
             groups.add(group);
             for (int i = 0; i < size; i++) {
                 if (available == 0) {
+                    //group is full, start a new one
                     break;
                 }
                 Clan next = clans[i];

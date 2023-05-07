@@ -17,22 +17,27 @@ public class AtmHandler extends Handler {
 
     @Override
     protected void handle(InputStream is, JsonWriter writer) throws Exception {
-        List<Atm>[] buckets = new List[BUCKETS_COUNT];
         Iterator<Request> requests = json.iterateOver(Request.class, is);
         int requestsCount = 0;
         if (requests == null) {
             writer.writeAscii("[]");
             return;
         }
+
+        //sort requests using bucket sort, one bucket per possible region and request type combination
+        List<Atm>[] buckets = new List[BUCKETS_COUNT];
         while (requests.hasNext()) {
             requestsCount++;
             Request request = requests.next();
+            //sort by region and then request type
             int region = request.region() * REQUEST_TYPES_COUNT + request.requestType().ordinal();
             if (buckets[region] == null) {
                 buckets[region] = new ArrayList<>();
             }
             buckets[region].add(new Atm(request.region(), request.atmId()));
         }
+
+        //for each region store only first appearance of any atm id
         List<Atm> atms = new ArrayList<>(requestsCount);
         for (int i = 0; i < buckets.length; i += REQUEST_TYPES_COUNT) {
             BitSet visited = new BitSet();
