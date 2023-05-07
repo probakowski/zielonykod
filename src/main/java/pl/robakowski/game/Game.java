@@ -2,26 +2,21 @@ package pl.robakowski.game;
 
 import com.dslplatform.json.CompiledJson;
 
-@CompiledJson
-public record Game(int groupCount, Clan[] clans) {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-    public Game(int groupCount, Clan[] clans) {
+@CompiledJson
+public record Game(int groupCount, List<Clan> clans) {
+
+    public Game(int groupCount, List<Clan> clans) {
         this.groupCount = groupCount;
-        if (clans == null) {
-            this.clans = new Clan[0];
-        } else {
-            this.clans = copy(clans);
-        }
+        this.clans = new ArrayList<>(clans);
+        this.clans.sort(null);
     }
 
     @Override
-    public Clan[] clans() {
-        return copy(clans);
-    }
-
-    private Clan[] copy(Clan[] clans) {
-        Clan[] newClans = new Clan[clans.length];
-        System.arraycopy(clans, 0, newClans, 0, clans.length);
-        return newClans;
+    public List<Clan> clans() {
+        return Collections.unmodifiableList(clans);
     }
 }

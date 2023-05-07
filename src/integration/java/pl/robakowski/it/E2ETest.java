@@ -3,6 +3,7 @@ package pl.robakowski.it;
 import com.dslplatform.json.DslJson;
 import io.activej.bytebuf.ByteBuf;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,9 @@ import org.slf4j.LoggerFactory;
 import pl.robakowski.Launcher;
 import pl.robakowski.atms.AtmHandler;
 import pl.robakowski.atms.Request;
+import pl.robakowski.game.Clan;
+import pl.robakowski.game.Game;
+import pl.robakowski.game.GameHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,6 +37,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 
 public class E2ETest {
 
@@ -144,7 +149,7 @@ public class E2ETest {
 
         try (InputStream is = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(responseFile))) {
             byte[] expected = is.readAllBytes();
-//            Assertions.assertArrayEquals(expected, response);
+            Assertions.assertArrayEquals(expected, response);
         }
         return time;
     }
@@ -170,5 +175,28 @@ public class E2ETest {
         ByteBuf buf = new AtmHandler().handle(new ByteArrayInputStream(bytes));
         Files.write(Path.of("src", "integration", "resources", "atms_big2_request.json"), bytes, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE_NEW);
         Files.write(Path.of("src", "integration", "resources", "atms_big2_response.json"), buf.asArray(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE_NEW);
+    }
+
+    @Disabled("only used for data generation")
+    @Test
+    public void generateGamesBig() {
+        DslJson<Object> json = new DslJson<>();
+        Random random = new SecureRandom();
+        IntStream.range(0, 1000).parallel().forEach(i -> {
+            List<Clan> clans = IntStream.range(0, 20000)
+                    .mapToObj($ -> new Clan(random.nextInt(1000), random.nextInt(100000)))
+                    .toList();
+            Game game = new Game(1000, clans);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                json.serialize(game, baos);
+                byte[] bytes = baos.toByteArray();
+                ByteBuf buf = new GameHandler().handle(new ByteArrayInputStream(bytes));
+                Files.write(Path.of("src", "integration", "resources", "games", "game" + i + "_request.json"), bytes, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE_NEW);
+                Files.write(Path.of("src", "integration", "resources", "games", "game" + i + "_response.json"), buf.asArray(), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE_NEW);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
