@@ -5,6 +5,7 @@ import pl.robakowski.Handler;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,11 +21,10 @@ public class AtmHandler extends Handler {
         Iterator<Request> requests = json.iterateOver(Request.class, is);
         int requestsCount = 0;
         if (requests == null) {
-            writer.writeAscii("[]");
-            return;
+            requests = Collections.emptyIterator();
         }
 
-        //sort requests using bucket sort, one bucket per possible region and request type combination
+        //sort requests using bucket sort, one bucket per each possible region and request type combination
         List<Atm>[] buckets = new List[BUCKETS_COUNT];
         while (requests.hasNext()) {
             requestsCount++;

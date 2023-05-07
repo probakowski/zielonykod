@@ -14,8 +14,9 @@ import java.util.List;
  * keys[3*n] - limb 1 (increased by 1) of account number in slot n, 0 means empty slot
  * keys[3*n + 1] - limb 2 of account number in slot n
  * keys[3*n + 2] - index in valuesArr where Account associated with account number is stored
+ * This exploits cache of CPU better.
  * <p>
- * It's up to 2x faster than properly sized {@link java.util.HashMap}, see AccountMapBenchmark for timings.
+ * It's up to 2x faster than optimized {@link java.util.HashMap}, see AccountMapBenchmark for timings.
  */
 public class AccountMap {
 
