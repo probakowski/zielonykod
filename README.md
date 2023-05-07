@@ -10,6 +10,7 @@ This repository contains the code for [Zielona Tesla za Zielony kod](https://www
 Run `./build.sh` to build the project
 
 Run `./run.sh` to run. The server is ready when you see following message in log:
+
 `HTTP Server is now available at http://localhost:8080/`
 
 There is also set of E2E tests that can be run with `./gradlew e2e`
