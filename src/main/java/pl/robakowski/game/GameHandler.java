@@ -37,8 +37,8 @@ public class GameHandler extends Handler {
         for (Clan clan : clans) {
             boolean shouldAdd = true;
             int size = groups.size();
+            int numberOfPlayers = clan.numberOfPlayers();
             for (int i = firstFree; i < size; i++) {
-                int numberOfPlayers = clan.numberOfPlayers();
                 if (capacity[i] >= numberOfPlayers) {
                     groups.get(i).add(clan);
                     capacity[i] -= numberOfPlayers;
